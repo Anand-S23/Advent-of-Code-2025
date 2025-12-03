@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"fmt"
 )
 
 func mod(a, b int) int {
@@ -14,7 +13,8 @@ func mod(a, b int) int {
     return r
 }
 
-func update_tick(text string, current_tick int) int {
+func update_tick(text string, current_tick int) (int, int)  {
+	last_tick := current_tick
 	dir := text[0]
 	distance, err := strconv.Atoi(text[1:])
     if err != nil {
@@ -22,16 +22,27 @@ func update_tick(text string, current_tick int) int {
     }
 
 	if dir == 'R' {
-		current_tick += distance
+		current_tick += distance % 100
 	} else if dir == 'L' {
-		current_tick -= distance
+		current_tick -= distance % 100
 	} else {
 		log.Fatal("Not right or left")
 	}
 
+	rotations := (distance - mod(distance, 100)) / 100
+
+	if current_tick < 0 || current_tick > 99 {
+		if last_tick != 0 {
+			rotations++
+		}
+	}
+
+	if current_tick == 0 {
+		rotations++
+	} 
+
 	current_tick = mod(current_tick, 100)
-	fmt.Printf("%c, %d\n", dir, current_tick)
-	return current_tick
+	return current_tick, rotations
 }
 
 func main() {
@@ -47,10 +58,9 @@ func main() {
 
 	res := 0
 	for scanner.Scan() {
-		current_tick = update_tick(scanner.Text(), current_tick)
-		if current_tick == 0 {
-			res++
-		}
+		new_tick, rotations := update_tick(scanner.Text(), current_tick)
+		res += rotations
+		current_tick = new_tick
 	}
 
 	println(res)
